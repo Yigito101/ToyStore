@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Yeni Profil",
+    "Projects": [
+      {
+        "Path": "ToyStore.Api\\ToyStore.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ToyStore.UI\\ToyStore.UI.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

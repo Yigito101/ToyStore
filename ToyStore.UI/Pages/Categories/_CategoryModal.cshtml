@@ -1,0 +1,35 @@
+﻿<!-- Arka plan örtüsü ve Modal Container -->
+<div id="categoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-900">Yeni Kategori Ekle</h3>
+            <!-- GÜNCELLENDİ: Çarpı butonu CategoryUI.closeModal'a bağlandı -->
+            <button type="button" onclick="CategoryUI.closeModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- GÜNCELLENDİ: window.saveCategory'ye bağlandı -->
+        <form id="categoryForm" onsubmit="window.saveCategory(event)">
+
+            <!-- Temel Gizli Alanlar -->
+            <input type="hidden" id="categoryId" value="0">
+            <input type="hidden" id="categoryRowVersion" value="">
+            <input type="hidden" id="categoryIsActive" value="true"> <!-- JS'in hata vermemesi için -->
+            <!-- YENİ: Kirlilik (Dirty) Kontrolü İçin Orijinal Değerler -->
+            <input type="hidden" id="originalCategoryName" value="">
+            <input type="hidden" id="originalCategoryIsActive" value="">
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Adı</label>
+                <input type="text" id="categoryName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-brand focus:border-brand">
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <!-- GÜNCELLENDİ: İptal butonu CategoryUI.closeModal'a bağlandı -->
+                <button type="button" onclick="CategoryUI.closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">İptal</button>
+                <button type="submit" id="btnSave" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>

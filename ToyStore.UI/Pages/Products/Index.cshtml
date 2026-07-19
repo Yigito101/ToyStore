@@ -1,0 +1,91 @@
+﻿@page
+@model ToyStore.UI.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "Oyuncak Yönetimi";
+}
+
+<!-- Rol Bazlı Karşılama Mesajı (JS ile içeriği değiştireceğiz) -->
+<p id="pageDescription" class="text-gray-600 mb-6 text-sm">
+    Sistemdeki tüm oyuncakları buradan yönetebilirsiniz.
+</p>
+
+<!-- Üst Kontrol Paneli -->
+<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+    <!-- Sol Kısım: Arama ve Durum Filtreleri -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+        <!-- Arama Kutusu -->
+        <input type="text" id="searchInput" onkeyup="window.searchProducts()" placeholder="ID, Ürün veya Kategori ara..."
+               class="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+        <!-- Durum Filtre Butonları (MERKEZİ ENUM ENTEGRASYONU) -->
+        <div class="flex space-x-2">
+            <button onclick="window.filterByStatus(window.AppStatuses.ACTIVE)" class="border border-green-500 text-green-600 hover:bg-green-500 hover:text-white px-3 py-1 rounded text-sm transition-colors">Aktifler</button>
+            <button onclick="window.filterByStatus(window.AppStatuses.INACTIVE)" class="border border-red-500 text-red-600 hover:bg-red-500 hover:text-white px-3 py-1 rounded text-sm transition-colors">Pasifler</button>
+            <button onclick="window.filterByStatus(window.AppStatuses.ALL)" class="border border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white px-3 py-1 rounded text-sm transition-colors">Tümü</button>
+        </div>
+    </div>
+
+    <!-- Sağ Kısım: Sıfırlama ve Yeni Ekle Butonları -->
+    <div class="flex space-x-2 w-full md:w-auto">
+        <button onclick="window.resetSorting()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium py-2 px-4 rounded shadow-sm transition-colors text-sm whitespace-nowrap">
+            Sıralamayı Sıfırla
+        </button>
+        <button id="btnAddNewProduct" onclick="ProductUI.openModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>Yeni Oyuncak Ekle</span>
+        </button>
+    </div>
+</div>
+
+<!-- Oyuncaklar Tablosu -->
+<!-- Ürünler Tablosu -->
+<!-- w-full ve overflow-x-auto eklenerek yatay bar koruması sağlandı -->
+<div class="bg-white shadow rounded-lg w-full overflow-x-auto" id="tableContainer">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th onclick="window.sortBy('id')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    ID <span id="sort-icon-id" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Ürün Adı <span id="sort-icon-name" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('categoryName')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Kategori <span id="sort-icon-categoryName" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('price')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Fiyat <span id="sort-icon-price" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('stock')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Stok <span id="sort-icon-stock" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('isActive')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Durum <span id="sort-icon-isActive" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th onclick="window.sortBy('isFavorite')" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100">
+                    Favori Durumu <span id="sort-icon-isFavorite" class="ml-1 text-gray-400">↕</span>
+                </th>
+                <th id="actionsColumnHeader" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+            <tr>
+                <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">Yükleniyor...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- Ürün Ekle/Düzenle Modalı -->
+<partial name="_ProductModal" />
+<!-- Merkezi Sayfalama Çubuğu -->
+<partial name="_PaginationBar" />
+
+@section Scripts {
+    <!-- SIFIR HARDCODED & PERFORMANS ODAKLI: GUID'ler temizlendi, yerleşik önbellek motoru bağlandı -->
+    <script src="~/js/product/ProductApi.js" asp-append-version="true"></script>
+    <script src="~/js/product/ProductUI.js" asp-append-version="true"></script>
+    <script src="~/js/product/products.js" asp-append-version="true"></script>
+}

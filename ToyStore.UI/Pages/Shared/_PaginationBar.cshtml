@@ -1,0 +1,27 @@
+﻿<div class="bg-white px-4 py-3 border border-gray-200 mt-2 rounded-lg shadow-sm flex items-center justify-between sm:px-6 hidden" id="paginationContainer">
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm text-gray-700">
+                Toplam <span class="font-medium text-brand" id="totalItemCount">0</span> kayıttan
+                <span class="font-medium" id="startItemIndex">0</span> - <span class="font-medium" id="endItemIndex">0</span> arası gösteriliyor.
+            </p>
+        </div>
+        <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <!-- ÖNCEKİ BUTONU -->
+                <button onclick="window.changeGlobalPage(-1)" id="btnPrevPage" class="relative inline-flex items-center px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Önceki
+                </button>
+
+                <span id="pageInfoText" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-50 text-sm font-medium text-gray-700">
+                    1 / 1
+                </span>
+
+                <!-- SONRAKİ BUTONU -->
+                <button onclick="window.changeGlobalPage(1)" id="btnNextPage" class="relative inline-flex items-center px-4 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    Sonraki
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>

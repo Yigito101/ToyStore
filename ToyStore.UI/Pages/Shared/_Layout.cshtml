@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>@ViewData["Title"] - ToyStore</title>
+
+    <!-- 1. Anti-Flicker Kalkanı -->
+    <style id="anti-flicker-style">
+            body {
+                display: none !important;
+            }
+    </style>
+
+    <!-- 2. Gelişmiş Küresel Konfigürasyon (EN TEPEDE OLMALI - ApiUrl Hatasını Çözer) -->
+    <script>
+            window.AppConfig = {
+                Pagination: {
+                    // C# appsettings.json dosyasından oku, gelmezse yedek (fallback) değerleri bas
+                    DefaultSize: Number("@Configuration["Pagination:DefaultPageSize"]") || 10,
+                    MaxSize: Number("@Configuration["Pagination:MaxPageSize"]") || 50
+                },
+                ApiUrl: "@Configuration["ApiSettings:BaseUrl"]" || "https://localhost:7223"
+            };
+    </script>
+
+    <!-- 3. Ortak Güvenlik ve API Kütüphaneleri (Sayfa gövdesi dolmadan yüklenmeli) -->
+    <script src="~/js/NotificationUI.js" asp-append-version="true"></script>
+    <script src="~/js/api.js" asp-append-version="true"></script>
+    <script src="~/js/auth/AuthApi.js" asp-append-version="true"></script>
+    <script src="~/js/auth/AuthUI.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/paginationHelper.js" asp-append-version="true"></script>
+
+    <!-- 4. Gelişmiş Yetki, Süre ve Canlılık Motoru -->
+    <script>
+        (function () {
+        // ÇÖZÜM: Havuz localStorage olarak değiştirildi
+        const token = localStorage.getItem("token");
+        let isValid = false;
+
+        if (token) {
+        try {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        const expiry = payload.exp;
+        const now = Math.floor(Date.now() / 1000);
+
+        if (expiry > now) {
+        isValid = true;
+        }
+        } catch (e) {
+        console.error("Token doğrulama hatası:", e);
+        isValid = false;
+        }
+        }
+
+        if (!isValid) {
+        // ÇÖZÜM: localStorage temizleniyor
+        localStorage.removeItem("token");
+        const styleBlock = document.getElementById("anti-flicker-style");
+        if (styleBlock) styleBlock.remove();
+        window.location.replace("/Login");
+        }  else {
+        // v2 Canlılık Doğrulama
+        fetch(`${window.AppConfig.ApiUrl}/api/auth/validate-session`, {
+        method: "GET",
+        headers: {
+        "Authorization": "Bearer " + token,
+        "Cache-Control": "no-cache"
+        }
+        })
+        .then(response => {
+        if (!response.ok) throw new Error("Geçersiz oturum.");
+
+        // 🌟 TAZELEME KALKANI: Canlılık kontrolü esnasında süre sınırına gelindiyse token'ı güncelle
+        const newContinuationToken = response.headers.get("New-Token");
+        if (newContinuationToken) {
+        localStorage.setItem("token", newContinuationToken);
+        }
+
+        // Oturum geçerli, anti-flicker kaldırılıyor
+        const styleBlock = document.getElementById("anti-flicker-style");
+        if (styleBlock) styleBlock.remove();
+        })
+        .catch(err => {
+        localStorage.removeItem("token");
+        const styleBlock = document.getElementById("anti-flicker-style");
+        if (styleBlock) styleBlock.remove();
+        window.location.replace("/Login");
+        });
+        }
+        })();
+    </script>
+
+    <!-- 5. Tailwind Konfigürasyonu -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+        theme: { extend: { colors: { brand: '#2563eb' } } }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center justify-center border-b border-slate-700">
+            <h1 id="sidebar-brand" class="text-xl font-bold uppercase tracking-wider">ToyStore</h1>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <a href="/Dashboard" class="block px-4 py-2 rounded transition-colors hover:bg-slate-700">Gösterge Paneli</a>
+            <a href="/Categories/Index" class="block px-4 py-2 rounded transition-colors hover:bg-slate-700">Kategoriler</a>
+            <a href="/Products/Index" class="block px-4 py-2 rounded transition-colors hover:bg-slate-700">Oyuncaklar</a>
+            <a href="/Users/Index" id="menu-users" class="block px-4 py-2 rounded transition-colors hover:bg-slate-700">Kullanıcılar</a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700">
+            <button onclick="window.logout()" class="w-full flex items-center px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-slate-700 rounded transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Çıkış Yap</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="h-16 bg-white shadow-sm flex items-center px-6 justify-between">
+            <h2 class="text-xl font-semibold text-gray-700">@ViewData["Title"]</h2>
+            <div class="flex items-center space-x-4">
+                <span id="user-greeting" class="text-sm text-gray-500">Hoş Geldiniz</span>
+                <button onclick="AuthUI.openChangePasswordModal()" class="text-sm font-medium text-brand hover:text-blue-800 underline transition-colors">Şifremi Değiştir</button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Şifre Değiştirme Modalı -->
+    <div id="changePasswordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Şifremi Değiştir</h3>
+                <div id="changePwError" class="hidden mt-2 text-sm text-red-600 bg-red-100 p-2 rounded"></div>
+
+                <form id="changePwForm" class="mt-4 text-left" onsubmit="window.savePersonalPassword(event)">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Mevcut Şifre</label>
+                        <input type="password" id="personalCurrentPw" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Yeni Şifre</label>
+                        <input type="password" id="personalNewPw" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Yeni Şifre (Tekrar)</label>
+                        <input type="password" id="personalConfirmPw" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand">
+                    </div>
+                    <div class="flex items-center justify-end mt-6 space-x-3">
+                        <button type="button" onclick="AuthUI.closeChangePasswordModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition-colors">İptal</button>
+                        <button type="submit" id="btnPersonalPw" class="bg-brand hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">Değiştir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Yapısal Fonksiyonlar ve Yaşam Döngüsü Tetikleyicileri (En Altta) -->
+    <script>
+        window.savePersonalPassword = async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById("btnPersonalPw");
+        const currentPw = document.getElementById("personalCurrentPw").value;
+        const newPw = document.getElementById("personalNewPw").value;
+        const confirmPw = document.getElementById("personalConfirmPw").value;
+
+        if (newPw !== confirmPw) {
+        AuthUI.showError("Yeni şifreler uyuşmuyor.");
+        return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Kaydediliyor...";
+
+        try {
+        const payload = { currentPassword: currentPw, newPassword: newPw, confirmNewPassword: confirmPw };
+        const response = await AuthApi.changePassword(payload);
+
+        if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        window.logout();
+        } else {
+        const err = await response.json();
+        AuthUI.showError(err.Message || err.message || "Şifre değiştirilemedi.");
+        }
+        } catch (error) {
+        AuthUI.showError("Sunucu ile bağlantı kurulamadı.");
+        } finally {
+        btn.disabled = false;
+        btn.textContent = "Değiştir";
+        }
+        };
+
+        // Sayfa Yaşam Döngüsü Başlangıcı
+        window.addEventListener('DOMContentLoaded', () => {
+        const role = typeof window.getUserRole === 'function' ? window.getUserRole() : window.AppRoles.USER;
+        AuthUI.applyLayoutRoleUI(role);
+        });
+    </script>
+
+    <!-- Alt sayfalara ait scriptlerin (Products/Index vb.) güvenle yükleneceği yer -->
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

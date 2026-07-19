@@ -1,0 +1,130 @@
+﻿@page
+@model ToyStore.UI.Pages.RegisterModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kayıt Ol - ToyStore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+        theme: { extend: { colors: { brand: '#2563eb' } } }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 h-screen flex items-center justify-center">
+
+    <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Hesap Oluştur</h1>
+            <p class="text-gray-500 mt-2">ToyStore dünyasına katılmak için bilgilerinizi girin.</p>
+        </div>
+
+        <form id="registerForm" onsubmit="window.handleRegister(event)">
+            <div id="messageBox" class="hidden p-3 mb-4 text-sm rounded border-l-4" role="alert"></div>
+
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700">E-Posta Adresi</label>
+                <input type="email" id="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="ornek@toystore.com">
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium text-gray-700">Şifre</label>
+                <input type="password" id="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••">
+            </div>
+
+            <div class="mb-6">
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Şifre (Tekrar)</label>
+                <input type="password" id="confirmPassword" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••">
+            </div>
+
+            <button type="submit" id="registerBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                Kayıt Ol
+            </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-600 border-t pt-4 border-gray-100">
+            Zaten bir hesabınız var mı?
+            <a href="/Login" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">Giriş yapın</a>
+        </div>
+    </div>
+
+    <!-- 1. ADIM: Güvenlik Zırhı ve AppConfig Yapılandırması -->
+    <script>
+        // GÜVENLİK ADIMI: Oturum açıkken Register formunu bypass etme zırhı
+        (function() {
+        // Yeni Zırh
+        const token = localStorage.getItem("token");
+        if (token) {
+        window.location.replace("/Dashboard");
+        }
+        })();
+
+        window.AppConfig = {
+        Pagination: {
+        DefaultSize: Number("@Configuration["Pagination:DefaultPageSize"]") || 10,
+        MaxSize: Number("@Configuration["Pagination:MaxPageSize"]") || 50
+        },
+        ApiUrl: "@Configuration["ApiSettings:BaseUrl"]" || "https://localhost:7223"
+        };
+    </script>
+
+    <!-- 2. ADIM: Sistem ve UI Kütüphaneleri -->
+    <script src="~/js/NotificationUI.js" asp-append-version="true"></script>
+    <script src="~/js/api.js" asp-append-version="true"></script>
+    <script src="~/js/auth/RegisterUI.js" asp-append-version="true"></script>
+
+    <!-- Kayıt Olma Orkestratör Kodu -->
+    <script>
+        // Eğer kullanıcı login/register sayfalarındaysa ve auth zırhını geçmediyse durum kontrolü
+
+
+        window.handleRegister = async function (event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+        RegisterUI.showMessage("Şifreler birbiriyle eşleşmiyor.", "error");
+        return;
+        }
+
+        RegisterUI.setLoading(true);
+
+        try {
+        const response = await window.apiFetch(window.API_ROUTES.AUTH.REGISTER, {
+        method: "POST",
+        body: JSON.stringify({
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword
+        })
+        });
+
+        if (response && response.ok) {
+        RegisterUI.showMessage("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...", "success");
+        setTimeout(() => {
+        window.location.replace("/Login");
+        }, 2000);
+        } else {
+        const errorData = await response.json();
+        const errorMessage = errorData.Message || errorData.message || "Kayıt işlemi başarısız oldu.";
+        RegisterUI.showMessage(errorMessage, "error");
+        RegisterUI.setLoading(false);
+        }
+        } catch (error) {
+        console.error("Kayıt hatası:", error);
+        RegisterUI.showMessage("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.", "error");
+        RegisterUI.setLoading(false);
+        }
+        }
+    </script>
+</body>
+</html>

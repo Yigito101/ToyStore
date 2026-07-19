@@ -1,0 +1,28 @@
+﻿@page
+@model ToyStore.Pages.DashboardModel
+@{
+    ViewData["Title"] = "Gösterge Paneli";
+}
+
+<div class="container mx-auto p-6">
+    <!--
+      Tüm kartlar, Aktif/Pasif kırılımlı ilerleme çubukları ve Kritik Stok Widget'ı
+      JS orkestramız (DashboardUI.js) tarafından tamamen bu div'in içerisine dinamik olarak çizilecek.
+    -->
+    <div id="dashboardContainer" class="w-full">
+        <div class="text-center text-gray-500 py-10">
+            <span class="animate-pulse flex items-center justify-center gap-2">
+                🔄 İstatistikler ve envenver analizi yükleniyor...
+            </span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/NotificationUI.js" asp-append-version="true"></script>
+    <script src="~/js/users/UserApi.js" asp-append-version="true"></script> <!-- Bu dosyadan eminiz -->
+    <!-- Dashboard Orkestrası -->
+    <script src="~/js/dashboard/DashboardApi.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard/DashboardUI.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard/Dashboard.js" asp-append-version="true"></script>
+}
